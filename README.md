@@ -71,8 +71,8 @@ Unit tests for `generateMarkDown` are located in `__tests__/markDown.test.ts`.
 
 Example test cases:
 
-- Returns markdown with coverage and report
-- Returns markdown with default message if report is empty
+- Returns Markdown with coverage and report
+- Returns Markdown with a default message if the report is empty
 - Handles zero coverage
 
 To run the tests:
@@ -91,3 +91,4 @@ npm run test
 ## License
 
 See [LICENSE](./LICENSE).
+

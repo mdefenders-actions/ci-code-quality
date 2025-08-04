@@ -57,8 +57,15 @@ jobs:
         id: test-action
         uses: ./
         with:
-          milliseconds: 2000
+          runLint: true
+          runAudit: true
+          runTests: true
+          testCommand: 'npm run test:unit -- --coverage'
+          minCoverage: '65'
+          relativePath: '.'
 
-      - name: Print Output
-        id: output
-        run: echo "${{ steps.test-action.outputs.time }}"
+      - name: Print Coverage Output
+        run: echo "Coverage: ${{ steps.test-action.outputs.coverage }}"
+
+      - name: Print Report Output
+        run: echo "Report: ${{ steps.test-action.outputs.report }}"
