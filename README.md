@@ -91,4 +91,3 @@ npm run test
 ## License
 
 See [LICENSE](./LICENSE).
-
