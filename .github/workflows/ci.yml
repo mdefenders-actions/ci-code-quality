@@ -65,7 +65,9 @@ jobs:
           relativePath: '.'
 
       - name: Print Coverage Output
-        run: echo "Coverage: ${{ steps.test-action.outputs.coverage }}"
+        run: |
+          echo "Coverage: ${{ steps.test-action.outputs.coverage }}"
 
       - name: Print Report Output
-        run: echo "Report: ${{ steps.test-action.outputs.report }}"
+        run: |
+          echo "Report: ${{ steps.test-action.outputs.report }}"
