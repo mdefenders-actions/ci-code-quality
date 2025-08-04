@@ -65,6 +65,22 @@ npm run bundle
 - `__tests__/` — Unit tests (Jest)
 - `__fixtures__/` — Test fixtures
 
+## Tests
+
+Unit tests for `generateMarkDown` are located in `__tests__/markDown.test.ts`.
+
+Example test cases:
+
+- Returns markdown with coverage and report
+- Returns markdown with default message if report is empty
+- Handles zero coverage
+
+To run the tests:
+
+```bash
+npm run test
+```
+
 ## Contributing
 
 - Follow standard TypeScript/JavaScript best practices
