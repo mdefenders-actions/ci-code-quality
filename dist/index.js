@@ -27252,9 +27252,7 @@ async function generateMarkDown(coverage, report) {
     if (report === '') {
         report = 'No coverage report provided.';
     }
-    let markDown = `### Code Quality Report\n\n`;
-    markDown += `**Coverage**: ${coverage}%\n\n`;
-    markDown += `**Report**:\n\n`;
+    let markDown = `### Code Quality Report. **Coverage**: ${coverage}%\n\n`;
     markDown += `\`\`\`text\n${report}\n\`\`\`\n\n`;
     return markDown;
 }

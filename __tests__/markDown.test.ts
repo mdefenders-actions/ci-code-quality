@@ -3,9 +3,7 @@ import { generateMarkDown } from '../src/markDown.js'
 describe('generateMarkDown', () => {
   it('returns markdown with coverage and report', async () => {
     const result = await generateMarkDown(85, 'All tests passed!')
-    expect(result).toContain('### Code Quality Report')
-    expect(result).toContain('**Coverage**: 85%')
-    expect(result).toContain('**Report**:')
+    expect(result).toContain('### Code Quality Report. **Coverage**: 85%')
     expect(result).toContain('```text\nAll tests passed!\n```')
   })
 
