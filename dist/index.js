@@ -27299,10 +27299,10 @@ async function runTests() {
                 stdout: (data) => output.push(data)
             }
         });
-        coreExports.endGroup();
         await fs.access(coverageFile);
         const { total: { statements: { pct: coverage } } } = JSON.parse(await fs.readFile(coverageFile, 'utf-8'));
         coreExports.info(`Detected coverage: ${coverage}%`);
+        coreExports.endGroup();
         return [coverage, Buffer.concat(output).toString('utf-8')];
     }
     return [-1, 'No coverage check requested'];

@@ -47,7 +47,6 @@ export async function runTests(): Promise<[number, string]> {
         }
       }
     )
-    core.endGroup()
     await fs.access(coverageFile)
     const {
       total: {
@@ -55,6 +54,7 @@ export async function runTests(): Promise<[number, string]> {
       }
     } = JSON.parse(await fs.readFile(coverageFile, 'utf-8'))
     core.info(`Detected coverage: ${coverage}%`)
+    core.endGroup()
     return [coverage, Buffer.concat(output).toString('utf-8')]
   }
   return [-1, 'No coverage check requested']
