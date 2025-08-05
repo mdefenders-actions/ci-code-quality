@@ -1,23 +1,49 @@
-name: The name of your action here
-description: Provide a description here
-author: Your name or organization here
+name: ci-code-quality
+description:
+  Run code quality checks including linting, vulnerability scanning, and tests
+  with coverage checks.
+author: aditor@gmail.com
 
-# Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
-  icon: heart
+  icon: eye
   color: red
 
-# Define your inputs here.
 inputs:
-  milliseconds:
-    description: Your input description here
-    required: true
-    default: '1000'
+  runLint:
+    description: 'Run ESLint'
+    default: 'true'
+    required: false
 
-# Define your outputs here.
+  runAudit:
+    description: 'Run npm audit'
+    default: 'true'
+    required: false
+
+  runTests:
+    description: 'Run tests'
+    default: 'true'
+    required: false
+
+  testCommand:
+    description: 'Test command to run'
+    default: 'npm run test:unit -- --coverage'
+    required: false
+
+  minCoverage:
+    description: 'Minimum test coverage threshold (%)'
+    default: '65'
+    required: false
+
+  relativePath:
+    description: 'Relative path to the project directory'
+    default: '.'
+    required: false
+
 outputs:
-  time:
-    description: Your output description here
+  report:
+    description: Code Quality Report
+  coverage:
+    description: Test Coverage Percentage
 
 runs:
   using: node20

@@ -1,62 +1,76 @@
 /**
  * Unit tests for the action's main functionality, src/main.ts
  *
- * To mock dependencies in ESM, you can create fixtures that export mock
- * functions and objects. For example, the core module is mocked in this test,
- * so that the actual '@actions/core' module is not imported.
+ * Uses Jest ESM mocking to replace dependencies with fixtures.
  */
 import { jest } from '@jest/globals'
 import * as core from '../__fixtures__/core.js'
-import { wait } from '../__fixtures__/wait.js'
+import { runTests } from '../__fixtures__/runTests.js'
+import { generateMarkDown } from '../__fixtures__/markDown.js'
 
-// Mocks should be declared before the module being tested is imported.
+// Mock dependencies before importing the module under test
 jest.unstable_mockModule('@actions/core', () => core)
-jest.unstable_mockModule('../src/wait.js', () => ({ wait }))
+jest.unstable_mockModule('../src/runTests.js', () => ({ runTests }))
+jest.unstable_mockModule('../src/markDown.js', () => ({ generateMarkDown }))
 
-// The module being tested should be imported dynamically. This ensures that the
-// mocks are used in place of any actual dependencies.
+// Import the module under test after mocks are set up
 const { run } = await import('../src/main.js')
 
 describe('main.ts', () => {
   beforeEach(() => {
-    // Set the action's inputs as return values from core.getInput().
-    core.getInput.mockImplementation(() => '500')
-
-    // Mock the wait function so that it does not actually wait.
-    wait.mockImplementation(() => Promise.resolve('done!'))
+    // Mock core.getInput to return valid values
+    core.getInput.mockImplementation((name: string) => {
+      if (name === 'minCoverage') return '80'
+      if (name === 'relativePath') return '.'
+      if (name === 'testCommand') return 'npm test'
+      return 'true'
+    })
+    // Mock runTests to return a valid tuple
+    runTests.mockImplementation(() => Promise.resolve([100, 'done!']))
+    // Mock generateMarkDown to return the report string (second value from runTests)
+    generateMarkDown.mockImplementation((coverage: number, report: string) =>
+      Promise.resolve(report)
+    )
   })
 
   afterEach(() => {
     jest.resetAllMocks()
   })
 
-  it('Sets the time output', async () => {
+  it('sets the coverage and report outputs', async () => {
     await run()
-
-    // Verify the time output was set.
-    expect(core.setOutput).toHaveBeenNthCalledWith(
-      1,
-      'time',
-      // Simple regex to match a time string in the format HH:MM:SS.
-      expect.stringMatching(/^\d{2}:\d{2}:\d{2}/)
-    )
+    expect(core.setOutput).toHaveBeenCalledWith('coverage', 100)
+    expect(core.setOutput).toHaveBeenCalledWith('report', 'done!')
   })
 
-  it('Sets a failed status', async () => {
-    // Clear the getInput mock and return an invalid value.
-    core.getInput.mockClear().mockReturnValueOnce('this is not a number')
-
-    // Clear the wait mock and return a rejected promise.
-    wait
-      .mockClear()
-      .mockRejectedValueOnce(new Error('milliseconds is not a number'))
-
+  it('sets a failed status on error', async () => {
+    runTests.mockImplementationOnce(() =>
+      Promise.reject(new Error('test error'))
+    )
     await run()
-
-    // Verify that the action was marked as failed.
-    expect(core.setFailed).toHaveBeenNthCalledWith(
-      1,
-      'milliseconds is not a number'
+    expect(core.setFailed).toHaveBeenCalledWith('test error')
+  })
+  it('throws an unknown error', async () => {
+    runTests.mockImplementationOnce(() => Promise.reject('unknown error'))
+    await run()
+    expect(core.setFailed).toHaveBeenCalledWith('Unknown error occurred')
+  })
+  it('Test no coverage requested', async () => {
+    runTests.mockImplementation(() =>
+      Promise.resolve([-1, 'No coverage check requested!'])
+    )
+    await run()
+    expect(core.setOutput).toHaveBeenCalledWith('coverage', 0)
+    expect(core.setOutput).toHaveBeenCalledWith(
+      'report',
+      'No coverage check requested!'
+    )
+  })
+  it('handle coverage below the threshold', async () => {
+    runTests.mockImplementation(() => Promise.resolve([10, 'done!']))
+    await run()
+    expect(core.setFailed).toHaveBeenCalledWith(
+      'Coverage 10% is below threshold 80%'
     )
   })
 })

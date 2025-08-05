@@ -33,6 +33,7 @@
     "package": "npx rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
     "package:watch": "npm run package -- --watch",
     "test": "NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 npx jest",
+    "test:unit": "NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 npx jest",
     "all": "npm run format:write && npm run lint && npm run test && npm run coverage && npm run package"
   },
   "license": "MIT",
@@ -63,7 +64,7 @@
     "rollup": "^4.46.2",
     "ts-jest": "^29.4.1",
     "ts-jest-resolver": "^2.0.1",
-    "typescript": "^5.9.2"
+    "typescript": "^5.8.0"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "*"

@@ -27,6 +27,7 @@ import require$$6 from 'string_decoder';
 import require$$0$9 from 'diagnostics_channel';
 import require$$2$2 from 'child_process';
 import require$$6$1 from 'timers';
+import * as fs from 'fs/promises';
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
@@ -27246,18 +27247,63 @@ function requireCore () {
 
 var coreExports = requireCore();
 
-/**
- * Waits for a number of milliseconds.
- *
- * @param milliseconds The number of milliseconds to wait.
- * @returns Resolves with 'done!' after the wait is over.
- */
-async function wait(milliseconds) {
-    return new Promise((resolve) => {
-        if (isNaN(milliseconds))
-            throw new Error('milliseconds is not a number');
-        setTimeout(() => resolve('done!'), milliseconds);
-    });
+async function generateMarkDown(coverage, report) {
+    // Construct the Markdown content
+    if (report === '') {
+        report = 'No coverage report provided.';
+    }
+    let markDown = `### Code Quality Report. **Coverage**: ${coverage}%\n\n`;
+    markDown += `\`\`\`text\n${report}\n\`\`\`\n\n`;
+    return markDown;
+}
+
+var execExports = requireExec();
+
+async function runTests() {
+    // Construct the Markdown content
+    const runLint = coreExports.getBooleanInput('runLint', { required: true });
+    const runAudit = coreExports.getBooleanInput('runAudit', { required: true });
+    const runTests = coreExports.getBooleanInput('runTests', { required: true });
+    const testCommand = coreExports.getInput('testCommand', { required: true });
+    const relativePath = coreExports.getInput('relativePath', { required: true });
+    if (runLint) {
+        coreExports.startGroup('Running ESLint');
+        await execExports.exec('npx', ['eslint', '.'], {
+            cwd: relativePath,
+            failOnStdErr: true
+        });
+        coreExports.endGroup();
+    }
+    if (runAudit) {
+        coreExports.startGroup('Running npm audit');
+        await execExports.exec('npm', ['audit', '--audit-level=high'], {
+            cwd: relativePath,
+            failOnStdErr: true
+        });
+        coreExports.endGroup();
+    }
+    if (runTests) {
+        coreExports.startGroup('Running tests');
+        const output = [];
+        const coverageFile = `${relativePath}/coverage/coverage-summary.json`;
+        await execExports.exec('mkdir', ['-p', 'coverage'], { cwd: relativePath });
+        await execExports.exec(testCommand, [
+            '--coverageReporters=json-summary',
+            '--coverageReporters=text',
+            '--coverageReporters=html'
+        ], {
+            cwd: relativePath,
+            listeners: {
+                stdout: (data) => output.push(data)
+            }
+        });
+        await fs.access(coverageFile);
+        const { total: { statements: { pct: coverage } } } = JSON.parse(await fs.readFile(coverageFile, 'utf-8'));
+        coreExports.info(`Detected coverage: ${coverage}%`);
+        coreExports.endGroup();
+        return [coverage, Buffer.concat(output).toString('utf-8')];
+    }
+    return [-1, 'No coverage check requested'];
 }
 
 /**
@@ -27266,21 +27312,33 @@ async function wait(milliseconds) {
  * @returns Resolves when the action is complete.
  */
 async function run() {
+    let coverage = 0;
+    let report = '';
     try {
-        const ms = coreExports.getInput('milliseconds');
-        // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-        coreExports.debug(`Waiting ${ms} milliseconds ...`);
-        // Log the current timestamp, wait, then log the new timestamp
-        coreExports.debug(new Date().toTimeString());
-        await wait(parseInt(ms, 10));
-        coreExports.debug(new Date().toTimeString());
-        // Set outputs for other workflow steps to use
-        coreExports.setOutput('time', new Date().toTimeString());
+        const minCoverage = coreExports.getInput('minCoverage', { required: true });
+        [coverage, report] = await runTests();
+        if (coverage < 0) {
+            coverage = 0;
+        }
+        else if (coverage < parseFloat(minCoverage)) {
+            throw new Error(`Coverage ${coverage}% is below threshold ${minCoverage}%`);
+        }
     }
     catch (error) {
-        // Fail the workflow run if an error occurs
-        if (error instanceof Error)
+        if (error instanceof Error) {
+            coreExports.error(`Action failed with error: ${error.message}`);
             coreExports.setFailed(error.message);
+        }
+        else {
+            coreExports.error('Action failed with an unknown error');
+            coreExports.setFailed('Unknown error occurred');
+        }
+    }
+    finally {
+        const markDownReport = await generateMarkDown(coverage, report);
+        await coreExports.summary.addRaw(markDownReport, true).write();
+        coreExports.setOutput('coverage', coverage);
+        coreExports.setOutput('report', markDownReport);
     }
 }
 
