@@ -16,6 +16,6 @@ const summary = {
   addRaw: function () {
     return summary
   },
-  write: jest.fn().mockResolvedValue(undefined)
+  write: jest.fn(async () => undefined)
 }
 export { summary }
