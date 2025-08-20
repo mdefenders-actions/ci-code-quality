@@ -19,7 +19,7 @@ inputs:
     default: 'true'
     required: false
 
-  runTests:
+  runUnitTests:
     description: 'Run tests'
     default: 'true'
     required: false

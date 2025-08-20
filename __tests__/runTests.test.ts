@@ -1,5 +1,5 @@
 /**
- * Unit tests for runTests in src/runTests.ts
+ * Unit tests for runUnitTests in src/runUnitTests.ts
  *
  * Uses Jest ESM mocking to replace dependencies with fixtures.
  */
@@ -18,9 +18,9 @@ jest.unstable_mockModule('@actions/exec', () => exec)
 jest.unstable_mockModule('fs/promises', () => fs)
 
 // Import after all mocks are registered
-const { runTests } = await import('../src/runTests.js')
+const { runUnitTests } = await import('../src/runUnitTests.js')
 
-describe('runTests', () => {
+describe('runUnitTests', () => {
   beforeEach(() => {
     core.getBooleanInput.mockImplementation(() => true)
     core.getInput.mockImplementation((name: string) => {
@@ -52,7 +52,7 @@ describe('runTests', () => {
         }
       })
     )
-    const [coverage, report] = await runTests()
+    const [coverage, report] = await runUnitTests()
     expect(coverage).toBe(85)
     expect(report).toContain('test output')
     expect(core.info).toHaveBeenCalledWith('Detected coverage: 85%')
@@ -66,13 +66,13 @@ describe('runTests', () => {
         }
       })
     )
-    const [coverage] = await runTests()
+    const [coverage] = await runUnitTests()
     expect(coverage).toBe(50)
   })
 
   it('throws exception if no coverage file found', async () => {
     fs.access.mockRejectedValueOnce(new Error('File not found'))
-    await expect(runTests()).rejects.toThrow('File not found')
+    await expect(runUnitTests()).rejects.toThrow('File not found')
   })
 
   it('returns coverage -1 if no coverage requested', async () => {
@@ -84,7 +84,7 @@ describe('runTests', () => {
         }
       })
     )
-    const [coverage, report] = await runTests()
+    const [coverage, report] = await runUnitTests()
     expect(coverage).toBe(-1)
     expect(report).toContain('No coverage check requested')
   })

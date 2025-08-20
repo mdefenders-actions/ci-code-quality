@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import { generateMarkDown } from './markDown.js'
-import { runTests } from './runTests.js'
+import { runUnitTests } from './runUnitTests.js'
 
 /**
  * The main function for the action.
@@ -12,7 +12,7 @@ export async function run(): Promise<void> {
   let report = ''
   try {
     const minCoverage = core.getInput('minCoverage', { required: true })
-    ;[coverage, report] = await runTests()
+    ;[coverage, report] = await runUnitTests()
     if (coverage < 0) {
       coverage = 0
     } else if (coverage < parseFloat(minCoverage)) {

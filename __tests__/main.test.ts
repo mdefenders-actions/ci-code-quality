@@ -5,12 +5,14 @@
  */
 import { jest } from '@jest/globals'
 import * as core from '../__fixtures__/core.js'
-import { runTests } from '../__fixtures__/runTests.js'
+import { runUnitTests } from '../__fixtures__/runUnitTests.js'
 import { generateMarkDown } from '../__fixtures__/markDown.js'
 
 // Mock dependencies before importing the module under test
 jest.unstable_mockModule('@actions/core', () => core)
-jest.unstable_mockModule('../src/runTests.js', () => ({ runTests }))
+jest.unstable_mockModule('../src/runUnitTests.js', () => ({
+  runUnitTests: runUnitTests
+}))
 jest.unstable_mockModule('../src/markDown.js', () => ({ generateMarkDown }))
 
 // Import the module under test after mocks are set up
@@ -25,9 +27,9 @@ describe('main.ts', () => {
       if (name === 'testCommand') return 'npm test'
       return 'true'
     })
-    // Mock runTests to return a valid tuple
-    runTests.mockImplementation(() => Promise.resolve([100, 'done!']))
-    // Mock generateMarkDown to return the report string (second value from runTests)
+    // Mock runUnitTests to return a valid tuple
+    runUnitTests.mockImplementation(() => Promise.resolve([100, 'done!']))
+    // Mock generateMarkDown to return the report string (second value from runUnitTests)
     generateMarkDown.mockImplementation((coverage: number, report: string) =>
       Promise.resolve(report)
     )
@@ -44,19 +46,19 @@ describe('main.ts', () => {
   })
 
   it('sets a failed status on error', async () => {
-    runTests.mockImplementationOnce(() =>
+    runUnitTests.mockImplementationOnce(() =>
       Promise.reject(new Error('test error'))
     )
     await run()
     expect(core.setFailed).toHaveBeenCalledWith('test error')
   })
   it('throws an unknown error', async () => {
-    runTests.mockImplementationOnce(() => Promise.reject('unknown error'))
+    runUnitTests.mockImplementationOnce(() => Promise.reject('unknown error'))
     await run()
     expect(core.setFailed).toHaveBeenCalledWith('Unknown error occurred')
   })
   it('Test no coverage requested', async () => {
-    runTests.mockImplementation(() =>
+    runUnitTests.mockImplementation(() =>
       Promise.resolve([-1, 'No coverage check requested!'])
     )
     await run()
@@ -67,7 +69,7 @@ describe('main.ts', () => {
     )
   })
   it('handle coverage below the threshold', async () => {
-    runTests.mockImplementation(() => Promise.resolve([10, 'done!']))
+    runUnitTests.mockImplementation(() => Promise.resolve([10, 'done!']))
     await run()
     expect(core.setFailed).toHaveBeenCalledWith(
       'Coverage 10% is below threshold 80%'

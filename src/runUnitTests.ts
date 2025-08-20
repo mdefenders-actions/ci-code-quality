@@ -2,11 +2,11 @@ import * as core from '@actions/core'
 import { exec } from '@actions/exec'
 import * as fs from 'fs/promises'
 
-export async function runTests(): Promise<[number, string]> {
+export async function runUnitTests(): Promise<[number, string]> {
   // Construct the Markdown content
   const runLint = core.getBooleanInput('runLint', { required: true })
   const runAudit = core.getBooleanInput('runAudit', { required: true })
-  const runTests = core.getBooleanInput('runTests', { required: true })
+  const runUnitTests = core.getBooleanInput('runUnitTests', { required: true })
   const testCommand = core.getInput('testCommand', { required: true })
   const relativePath = core.getInput('relativePath', { required: true })
 
@@ -28,7 +28,7 @@ export async function runTests(): Promise<[number, string]> {
     core.endGroup()
   }
 
-  if (runTests) {
+  if (runUnitTests) {
     core.startGroup('Running tests')
     const output: Buffer[] = []
     const coverageFile = `${relativePath}/coverage/coverage-summary.json`

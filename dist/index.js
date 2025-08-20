@@ -27259,11 +27259,11 @@ async function generateMarkDown(coverage, report) {
 
 var execExports = requireExec();
 
-async function runTests() {
+async function runUnitTests() {
     // Construct the Markdown content
     const runLint = coreExports.getBooleanInput('runLint', { required: true });
     const runAudit = coreExports.getBooleanInput('runAudit', { required: true });
-    const runTests = coreExports.getBooleanInput('runTests', { required: true });
+    const runUnitTests = coreExports.getBooleanInput('runUnitTests', { required: true });
     const testCommand = coreExports.getInput('testCommand', { required: true });
     const relativePath = coreExports.getInput('relativePath', { required: true });
     if (runLint) {
@@ -27282,7 +27282,7 @@ async function runTests() {
         });
         coreExports.endGroup();
     }
-    if (runTests) {
+    if (runUnitTests) {
         coreExports.startGroup('Running tests');
         const output = [];
         const coverageFile = `${relativePath}/coverage/coverage-summary.json`;
@@ -27316,7 +27316,7 @@ async function run() {
     let report = '';
     try {
         const minCoverage = coreExports.getInput('minCoverage', { required: true });
-        [coverage, report] = await runTests();
+        [coverage, report] = await runUnitTests();
         if (coverage < 0) {
             coverage = 0;
         }
