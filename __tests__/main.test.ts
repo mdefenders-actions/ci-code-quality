@@ -5,13 +5,19 @@
  */
 import { jest } from '@jest/globals'
 import * as core from '../__fixtures__/core.js'
-import { runUnitTests } from '../__fixtures__/runUnitTests.js'
+import {
+  runUnitTests,
+  runLint,
+  runAudit
+} from '../__fixtures__/runUnitTests.js'
 import { generateMarkDown } from '../__fixtures__/markDown.js'
 
 // Mock dependencies before importing the module under test
 jest.unstable_mockModule('@actions/core', () => core)
 jest.unstable_mockModule('../src/runUnitTests.js', () => ({
-  runUnitTests: runUnitTests
+  runUnitTests,
+  runLint,
+  runAudit
 }))
 jest.unstable_mockModule('../src/markDown.js', () => ({ generateMarkDown }))
 
@@ -24,11 +30,11 @@ describe('main.ts', () => {
     core.getInput.mockImplementation((name: string) => {
       if (name === 'minCoverage') return '80'
       if (name === 'relativePath') return '.'
-      if (name === 'testCommand') return 'npm test'
+      if (name === 'unitTestCommand') return 'npm test'
       return 'true'
     })
-    // Mock runUnitTests to return a valid tuple
-    runUnitTests.mockImplementation(() => Promise.resolve([100, 'done!']))
+    core.getBooleanInput.mockReturnValue(true) // Mock runUnitTests to return a valid tuple
+    runUnitTests.mockResolvedValue([100, 'done!'])
     // Mock generateMarkDown to return the report string (second value from runUnitTests)
     generateMarkDown.mockImplementation((coverage: number, report: string) =>
       Promise.resolve(report)
@@ -37,6 +43,14 @@ describe('main.ts', () => {
 
   afterEach(() => {
     jest.resetAllMocks()
+  })
+
+  it('sets no teests allowed', async () => {
+    core.getBooleanInput.mockReturnValue(false) // Mock runUnitTests to return a valid tuple
+
+    await run()
+    expect(core.setOutput).toHaveBeenCalledWith('coverage', 0)
+    expect(core.setOutput).toHaveBeenCalledWith('report', '')
   })
 
   it('sets the coverage and report outputs', async () => {

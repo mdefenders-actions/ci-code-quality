@@ -19,12 +19,14 @@ jest.unstable_mockModule('fs/promises', () => fs)
 
 // Import after all mocks are registered
 const { runUnitTests } = await import('../src/runUnitTests.js')
+const { runLint } = await import('../src/runUnitTests.js')
+const { runAudit } = await import('../src/runUnitTests.js')
 
 describe('runUnitTests', () => {
   beforeEach(() => {
     core.getBooleanInput.mockImplementation(() => true)
     core.getInput.mockImplementation((name: string) => {
-      if (name === 'testCommand') return 'npm test'
+      if (name === 'unitTestCommand') return 'npm test'
       if (name === 'relativePath') return '.'
       if (name === 'minCoverage') return '80'
       return ''
@@ -52,7 +54,7 @@ describe('runUnitTests', () => {
         }
       })
     )
-    const [coverage, report] = await runUnitTests()
+    const [coverage, report] = await runUnitTests('.')
     expect(coverage).toBe(85)
     expect(report).toContain('test output')
     expect(core.info).toHaveBeenCalledWith('Detected coverage: 85%')
@@ -66,26 +68,34 @@ describe('runUnitTests', () => {
         }
       })
     )
-    const [coverage] = await runUnitTests()
+    const [coverage] = await runUnitTests('.')
     expect(coverage).toBe(50)
   })
 
   it('throws exception if no coverage file found', async () => {
     fs.access.mockRejectedValueOnce(new Error('File not found'))
-    await expect(runUnitTests()).rejects.toThrow('File not found')
+    await expect(runUnitTests('.')).rejects.toThrow('File not found')
   })
 
-  it('returns coverage -1 if no coverage requested', async () => {
-    core.getBooleanInput.mockImplementation(() => false)
-    fs.readFile.mockResolvedValueOnce(
-      JSON.stringify({
-        total: {
-          statements: { pct: 85 }
-        }
-      })
+  it('runs lint and calls exec with correct args', async () => {
+    await runLint('.')
+    expect(core.startGroup).toHaveBeenCalledWith('Running ESLint')
+    expect(exec.exec).toHaveBeenCalledWith(
+      'npx',
+      ['eslint', '.'],
+      expect.objectContaining({ cwd: '.' })
     )
-    const [coverage, report] = await runUnitTests()
-    expect(coverage).toBe(-1)
-    expect(report).toContain('No coverage check requested')
+    expect(core.endGroup).toHaveBeenCalled()
+  })
+
+  it('runs audit and calls exec with correct args', async () => {
+    await runAudit('.')
+    expect(core.startGroup).toHaveBeenCalledWith('Running npm audit')
+    expect(exec.exec).toHaveBeenCalledWith(
+      'npm',
+      ['audit', '--audit-level=high'],
+      expect.objectContaining({ cwd: '.' })
+    )
+    expect(core.endGroup).toHaveBeenCalled()
   })
 })

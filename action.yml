@@ -12,32 +12,30 @@ inputs:
   runLint:
     description: 'Run ESLint'
     default: 'true'
-    required: false
 
   runAudit:
     description: 'Run npm audit'
     default: 'true'
-    required: false
 
   runUnitTests:
     description: 'Run tests'
     default: 'true'
-    required: false
 
-  testCommand:
+  unitTestCommand:
     description: 'Test command to run'
     default: 'npm run test:unit -- --coverage'
-    required: false
 
   minCoverage:
     description: 'Minimum test coverage threshold (%)'
     default: '65'
-    required: false
 
   relativePath:
     description: 'Relative path to the project directory'
     default: '.'
-    required: false
+
+  reportTitle:
+    description: 'Title for the report'
+    default: 'Code Quality Report'
 
 outputs:
   report:
