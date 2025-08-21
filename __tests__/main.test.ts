@@ -5,19 +5,17 @@
  */
 import { jest } from '@jest/globals'
 import * as core from '../__fixtures__/core.js'
-import {
-  runUnitTests,
-  runLint,
-  runAudit
-} from '../__fixtures__/runUnitTests.js'
+import { runTests, runLint, runAudit } from '../__fixtures__/runTests.js'
 import { generateMarkDown } from '../__fixtures__/markDown.js'
+import { runIntegrationTests } from '../__fixtures__/runTests.js'
 
 // Mock dependencies before importing the module under test
 jest.unstable_mockModule('@actions/core', () => core)
-jest.unstable_mockModule('../src/runUnitTests.js', () => ({
-  runUnitTests,
+jest.unstable_mockModule('../src/runTests.js', () => ({
+  runTests,
   runLint,
-  runAudit
+  runAudit,
+  runIntegrationTests
 }))
 jest.unstable_mockModule('../src/markDown.js', () => ({ generateMarkDown }))
 
@@ -33,11 +31,13 @@ describe('main.ts', () => {
       if (name === 'unitTestCommand') return 'npm test'
       return 'true'
     })
-    core.getBooleanInput.mockReturnValue(true) // Mock runUnitTests to return a valid tuple
-    runUnitTests.mockResolvedValue([100, 'done!'])
-    // Mock generateMarkDown to return the report string (second value from runUnitTests)
-    generateMarkDown.mockImplementation((coverage: number, report: string) =>
-      Promise.resolve(report)
+    core.getBooleanInput.mockReturnValue(true) // Mock runTests to return a valid tuple
+    runTests.mockResolvedValue([100, 'done!'])
+    runIntegrationTests.mockResolvedValue('done!')
+    // Mock generateMarkDown to return the report string (second value from runTests)
+    generateMarkDown.mockImplementation(
+      (coverage: number | null | undefined, report: string) =>
+        Promise.resolve(report)
     )
   })
 
@@ -45,11 +45,11 @@ describe('main.ts', () => {
     jest.resetAllMocks()
   })
 
-  it('sets no teests allowed', async () => {
-    core.getBooleanInput.mockReturnValue(false) // Mock runUnitTests to return a valid tuple
+  it('sets no tests allowed', async () => {
+    core.getBooleanInput.mockReturnValue(false) // Mock runTests to return a valid tuple
 
     await run()
-    expect(core.setOutput).toHaveBeenCalledWith('coverage', 0)
+    expect(core.setOutput).toHaveBeenCalledWith('coverage', undefined)
     expect(core.setOutput).toHaveBeenCalledWith('report', '')
   })
 
@@ -60,30 +60,19 @@ describe('main.ts', () => {
   })
 
   it('sets a failed status on error', async () => {
-    runUnitTests.mockImplementationOnce(() =>
+    runTests.mockImplementationOnce(() =>
       Promise.reject(new Error('test error'))
     )
     await run()
     expect(core.setFailed).toHaveBeenCalledWith('test error')
   })
   it('throws an unknown error', async () => {
-    runUnitTests.mockImplementationOnce(() => Promise.reject('unknown error'))
+    runTests.mockImplementationOnce(() => Promise.reject('unknown error'))
     await run()
     expect(core.setFailed).toHaveBeenCalledWith('Unknown error occurred')
   })
-  it('Test no coverage requested', async () => {
-    runUnitTests.mockImplementation(() =>
-      Promise.resolve([-1, 'No coverage check requested!'])
-    )
-    await run()
-    expect(core.setOutput).toHaveBeenCalledWith('coverage', 0)
-    expect(core.setOutput).toHaveBeenCalledWith(
-      'report',
-      'No coverage check requested!'
-    )
-  })
   it('handle coverage below the threshold', async () => {
-    runUnitTests.mockImplementation(() => Promise.resolve([10, 'done!']))
+    runTests.mockImplementation(() => Promise.resolve([10, 'done!']))
     await run()
     expect(core.setFailed).toHaveBeenCalledWith(
       'Coverage 10% is below threshold 80%'

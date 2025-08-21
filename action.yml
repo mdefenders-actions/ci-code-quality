@@ -18,12 +18,20 @@ inputs:
     default: 'true'
 
   runUnitTests:
-    description: 'Run tests'
+    description: 'Run unit tests with coverage'
     default: 'true'
+
+  runIntegrationTests:
+    description: 'Run post-deploy integration tests'
+    default: 'false'
 
   unitTestCommand:
     description: 'Test command to run'
     default: 'npm run test:unit -- --coverage'
+
+  intTestCommand:
+    description: 'Test command to run'
+    default: 'make test-integration'
 
   minCoverage:
     description: 'Minimum test coverage threshold (%)'

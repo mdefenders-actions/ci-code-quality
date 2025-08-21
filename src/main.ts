@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import { generateMarkDown } from './markDown.js'
-import { runAudit, runLint, runUnitTests } from './runUnitTests.js'
+import { runAudit, runIntegrationTests, runLint, runTests } from './runTests.js'
 
 /**
  * The main function for the action.
@@ -8,13 +8,16 @@ import { runAudit, runLint, runUnitTests } from './runUnitTests.js'
  * @returns Resolves when the action is complete.
  */
 export async function run(): Promise<void> {
-  let coverage = 0
+  let coverage
   let report = ''
   try {
     const relativePath = core.getInput('relativePath', { required: true })
     const lintEnabled = core.getBooleanInput('runLint', { required: true })
     const auditEnabled = core.getBooleanInput('runAudit', { required: true })
     const unitTestsEnabled = core.getBooleanInput('runUnitTests', {
+      required: true
+    })
+    const intTestsEnabled = core.getBooleanInput('runIntegrationTests', {
       required: true
     })
     if (lintEnabled) {
@@ -25,14 +28,15 @@ export async function run(): Promise<void> {
     }
     if (unitTestsEnabled) {
       const minCoverage = core.getInput('minCoverage', { required: true })
-      ;[coverage, report] = await runUnitTests(relativePath)
-      if (coverage < 0) {
-        coverage = 0
-      } else if (coverage < parseFloat(minCoverage)) {
+      ;[coverage, report] = await runTests(relativePath)
+
+      if (coverage < parseFloat(minCoverage))
         throw new Error(
           `Coverage ${coverage}% is below threshold ${minCoverage}%`
         )
-      }
+    }
+    if (intTestsEnabled) {
+      report = await runIntegrationTests(relativePath)
     }
   } catch (error: unknown) {
     if (error instanceof Error) {

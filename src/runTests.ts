@@ -20,7 +20,7 @@ export async function runAudit(relativePath: string): Promise<void> {
   core.endGroup()
 }
 
-export async function runUnitTests(
+export async function runTests(
   relativePath: string
 ): Promise<[number, string]> {
   // Construct the Markdown content
@@ -54,4 +54,21 @@ export async function runUnitTests(
   core.info(`Detected coverage: ${coverage}%`)
   core.endGroup()
   return [coverage, Buffer.concat(output).toString('utf-8')]
+}
+
+export async function runIntegrationTests(
+  relativePath: string
+): Promise<string> {
+  core.startGroup('Running integration tests')
+  const intTestCommand = core.getInput('intTestCommand', { required: true })
+  const output: Buffer[] = []
+
+  await exec(intTestCommand, [], {
+    cwd: relativePath,
+    listeners: {
+      stdout: (data: Buffer) => output.push(data)
+    }
+  })
+  core.endGroup()
+  return Buffer.concat(output).toString('utf-8')
 }

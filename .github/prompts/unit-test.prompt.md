@@ -28,11 +28,11 @@ Use the following as an example of how to structure your unit tests:
  */
 import { jest } from '@jest/globals'
 import * as core from '../__fixtures__/core.js'
-import { runUnitTests } from '../__fixtures__/runUnitTests.js'
+import { runTests } from '../__fixtures__/runTests.js'
 
 // Mocks should be declared before the module being tested is imported.
 jest.unstable_mockModule('@actions/core', () => core)
-jest.unstable_mockModule('../src/runUnitTests.js', () => ({ runUnitTests }))
+jest.unstable_mockModule('../src/runTests.js', () => ({ runTests }))
 
 // The module being tested should be imported dynamically. This ensures that the
 // mocks are used in place of any actual dependencies.
@@ -43,8 +43,8 @@ describe('main.ts', () => {
     // Set the action's inputs as return values from core.getInput().
     core.getInput.mockImplementation(() => '500')
 
-    // Mock the runUnitTests function so that it does not actually runUnitTests.
-    runUnitTests.mockImplementation(() => Promise.resolve('done!'))
+    // Mock the runTests function so that it does not actually runTests.
+    runTests.mockImplementation(() => Promise.resolve('done!'))
   })
 
   afterEach(() => {
@@ -67,8 +67,8 @@ describe('main.ts', () => {
     // Clear the getInput mock and return an invalid value.
     core.getInput.mockClear().mockReturnValueOnce('this is not a number')
 
-    // Clear the runUnitTests mock and return a rejected promise.
-    runUnitTests
+    // Clear the runTests mock and return a rejected promise.
+    runTests
       .mockClear()
       .mockRejectedValueOnce(new Error('milliseconds is not a number'))
 

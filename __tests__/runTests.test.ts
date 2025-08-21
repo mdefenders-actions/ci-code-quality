@@ -1,5 +1,5 @@
 /**
- * Unit tests for runUnitTests in src/runUnitTests.ts
+ * Unit tests for runTests in src/runTests.ts
  *
  * Uses Jest ESM mocking to replace dependencies with fixtures.
  */
@@ -18,11 +18,11 @@ jest.unstable_mockModule('@actions/exec', () => exec)
 jest.unstable_mockModule('fs/promises', () => fs)
 
 // Import after all mocks are registered
-const { runUnitTests } = await import('../src/runUnitTests.js')
-const { runLint } = await import('../src/runUnitTests.js')
-const { runAudit } = await import('../src/runUnitTests.js')
+const { runTests } = await import('../src/runTests.js')
+const { runLint } = await import('../src/runTests.js')
+const { runAudit } = await import('../src/runTests.js')
 
-describe('runUnitTests', () => {
+describe('runTests', () => {
   beforeEach(() => {
     core.getBooleanInput.mockImplementation(() => true)
     core.getInput.mockImplementation((name: string) => {
@@ -54,7 +54,7 @@ describe('runUnitTests', () => {
         }
       })
     )
-    const [coverage, report] = await runUnitTests('.')
+    const [coverage, report] = await runTests('.')
     expect(coverage).toBe(85)
     expect(report).toContain('test output')
     expect(core.info).toHaveBeenCalledWith('Detected coverage: 85%')
@@ -68,13 +68,13 @@ describe('runUnitTests', () => {
         }
       })
     )
-    const [coverage] = await runUnitTests('.')
+    const [coverage] = await runTests('.')
     expect(coverage).toBe(50)
   })
 
   it('throws exception if no coverage file found', async () => {
     fs.access.mockRejectedValueOnce(new Error('File not found'))
-    await expect(runUnitTests('.')).rejects.toThrow('File not found')
+    await expect(runTests('.')).rejects.toThrow('File not found')
   })
 
   it('runs lint and calls exec with correct args', async () => {
@@ -97,5 +97,28 @@ describe('runUnitTests', () => {
       expect.objectContaining({ cwd: '.' })
     )
     expect(core.endGroup).toHaveBeenCalled()
+  })
+
+  it('runs integration tests and returns output', async () => {
+    core.getInput.mockImplementation((name: string) => {
+      if (name === 'intTestCommand') return 'npm run int-test'
+      return '.'
+    })
+    exec.exec.mockImplementation((_cmd, _args, options) => {
+      if (options && typeof options.listeners?.stdout === 'function') {
+        options.listeners.stdout(Buffer.from('integration output'))
+      }
+      return Promise.resolve(0)
+    })
+    const { runIntegrationTests } = await import('../src/runTests.js')
+    const result = await runIntegrationTests('.')
+    expect(core.startGroup).toHaveBeenCalledWith('Running integration tests')
+    expect(exec.exec).toHaveBeenCalledWith(
+      'npm run int-test',
+      [],
+      expect.objectContaining({ cwd: '.' })
+    )
+    expect(core.endGroup).toHaveBeenCalled()
+    expect(result).toContain('integration output')
   })
 })
