@@ -45,6 +45,26 @@ inputs:
     description: 'Title for the report'
     default: 'Code Quality Report'
 
+  appName:
+    description: 'Application name for the report'
+    default: '${{ github.repository }}'
+
+  servicePort:
+    description: 'Service port for the application'
+    default: '80'
+
+  serviceDomain:
+    description: 'Service domain for the application'
+    default: 'svc.cluster.local'
+
+  namespace:
+    description: 'Kubernetes namespace for the application'
+    default: 'default'
+
+  prefix:
+    description: 'Service URL prefix'
+    default: 'http://'
+
 outputs:
   report:
     description: Code Quality Report

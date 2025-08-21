@@ -29,15 +29,21 @@ describe('main.ts', () => {
       if (name === 'minCoverage') return '80'
       if (name === 'relativePath') return '.'
       if (name === 'unitTestCommand') return 'npm test'
+      if (name === 'appName') return 'myapp'
+      if (name === 'servicePort') return '8080'
+      if (name === 'serviceDomain') return 'svc.cluster.local'
+      if (name === 'namespace') return 'default'
+      if (name === 'prefix') return 'http://'
       return 'true'
     })
-    core.getBooleanInput.mockReturnValue(true) // Mock runTests to return a valid tuple
+    core.getBooleanInput.mockReturnValue(true)
     runTests.mockResolvedValue([100, 'done!'])
     runIntegrationTests.mockResolvedValue('done!')
-    // Mock generateMarkDown to return the report string (second value from runTests)
-    generateMarkDown.mockImplementation(
-      (coverage: number | null | undefined, report: string) =>
-        Promise.resolve(report)
+    // Mock generateMarkDown to return a markdown string
+    generateMarkDown.mockImplementation((coverage, url, report) =>
+      Promise.resolve(
+        `### Code Quality Report\n[Service URL ${url}](${url})\n### **Coverage**: ${coverage}%\n\n\`\`\`text\n${report}\n\`\`\``
+      )
     )
   })
 
@@ -46,17 +52,32 @@ describe('main.ts', () => {
   })
 
   it('sets no tests allowed', async () => {
-    core.getBooleanInput.mockReturnValue(false) // Mock runTests to return a valid tuple
-
+    core.getBooleanInput.mockReturnValue(false)
     await run()
     expect(core.setOutput).toHaveBeenCalledWith('coverage', undefined)
-    expect(core.setOutput).toHaveBeenCalledWith('report', '')
+    expect(core.setOutput).toHaveBeenCalledWith(
+      'report',
+      expect.stringContaining('### Code Quality Report')
+    )
   })
 
   it('sets the coverage and report outputs', async () => {
     await run()
     expect(core.setOutput).toHaveBeenCalledWith('coverage', 100)
-    expect(core.setOutput).toHaveBeenCalledWith('report', 'done!')
+    expect(core.setOutput).toHaveBeenCalledWith(
+      'report',
+      expect.stringContaining('### Code Quality Report')
+    )
+    expect(core.setOutput).toHaveBeenCalledWith(
+      'report',
+      expect.stringContaining('### **Coverage**: 100%')
+    )
+    // Check that the service URL is constructed correctly
+    expect(generateMarkDown).toHaveBeenCalledWith(
+      100,
+      'http://myapp.default.svc.cluster.local:8080',
+      'done!'
+    )
   })
 
   it('sets a failed status on error', async () => {

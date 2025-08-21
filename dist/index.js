@@ -27247,7 +27247,7 @@ function requireCore () {
 
 var coreExports = requireCore();
 
-async function generateMarkDown(coverage, report) {
+async function generateMarkDown(coverage, url, report) {
     // Construct the Markdown content
     if (report === '') {
         report = 'No coverage report provided.';
@@ -27255,6 +27255,9 @@ async function generateMarkDown(coverage, report) {
     let markDown = '';
     const reportTitle = coreExports.getInput('reportTitle', { required: true });
     markDown = `### ${reportTitle}\n\n`;
+    if (url) {
+        markDown += `[Service URL ${url}](${url})\n\n`;
+    }
     if (coverage !== undefined && coverage !== null && !isNaN(coverage)) {
         markDown += `### **Coverage**: ${coverage}%\n\n`;
     }
@@ -27325,6 +27328,7 @@ async function runIntegrationTests(relativePath) {
 async function run() {
     let coverage;
     let report = '';
+    let url = '';
     try {
         const relativePath = coreExports.getInput('relativePath', { required: true });
         const lintEnabled = coreExports.getBooleanInput('runLint', { required: true });
@@ -27349,6 +27353,12 @@ async function run() {
         }
         if (intTestsEnabled) {
             report = await runIntegrationTests(relativePath);
+            const appName = coreExports.getInput('appName', { required: true });
+            const servicePort = coreExports.getInput('servicePort', { required: true });
+            const serviceDomain = coreExports.getInput('serviceDomain', { required: true });
+            const namespace = coreExports.getInput('namespace', { required: true });
+            const prefix = coreExports.getInput('prefix', { required: true });
+            url = `${prefix}${appName}.${namespace}.${serviceDomain}:${servicePort}`;
         }
     }
     catch (error) {
@@ -27362,7 +27372,7 @@ async function run() {
         }
     }
     finally {
-        const markDownReport = await generateMarkDown(coverage, report);
+        const markDownReport = await generateMarkDown(coverage, url, report);
         await coreExports.summary.addRaw(markDownReport, true).write();
         coreExports.setOutput('coverage', coverage);
         coreExports.setOutput('report', markDownReport);

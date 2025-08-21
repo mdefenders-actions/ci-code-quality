@@ -10,6 +10,7 @@ import { runAudit, runIntegrationTests, runLint, runTests } from './runTests.js'
 export async function run(): Promise<void> {
   let coverage
   let report = ''
+  let url = ''
   try {
     const relativePath = core.getInput('relativePath', { required: true })
     const lintEnabled = core.getBooleanInput('runLint', { required: true })
@@ -20,6 +21,7 @@ export async function run(): Promise<void> {
     const intTestsEnabled = core.getBooleanInput('runIntegrationTests', {
       required: true
     })
+
     if (lintEnabled) {
       await runLint(relativePath)
     }
@@ -37,6 +39,12 @@ export async function run(): Promise<void> {
     }
     if (intTestsEnabled) {
       report = await runIntegrationTests(relativePath)
+      const appName = core.getInput('appName', { required: true })
+      const servicePort = core.getInput('servicePort', { required: true })
+      const serviceDomain = core.getInput('serviceDomain', { required: true })
+      const namespace = core.getInput('namespace', { required: true })
+      const prefix = core.getInput('prefix', { required: true })
+      url = `${prefix}${appName}.${namespace}.${serviceDomain}:${servicePort}`
     }
   } catch (error: unknown) {
     if (error instanceof Error) {
@@ -47,7 +55,7 @@ export async function run(): Promise<void> {
       core.setFailed('Unknown error occurred')
     }
   } finally {
-    const markDownReport = await generateMarkDown(coverage, report)
+    const markDownReport = await generateMarkDown(coverage, url, report)
     await core.summary.addRaw(markDownReport, true).write()
     core.setOutput('coverage', coverage)
     core.setOutput('report', markDownReport)

@@ -2,6 +2,7 @@ import * as core from '@actions/core'
 
 export async function generateMarkDown(
   coverage: number | undefined | null,
+  url: string,
   report: string
 ): Promise<string> {
   // Construct the Markdown content
@@ -11,6 +12,9 @@ export async function generateMarkDown(
   let markDown = ''
   const reportTitle = core.getInput('reportTitle', { required: true })
   markDown = `### ${reportTitle}\n\n`
+  if (url) {
+    markDown += `[Service URL ${url}](${url})\n\n`
+  }
   if (coverage !== undefined && coverage !== null && !isNaN(coverage)) {
     markDown += `### **Coverage**: ${coverage}%\n\n`
   }

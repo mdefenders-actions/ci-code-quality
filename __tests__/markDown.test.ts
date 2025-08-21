@@ -19,26 +19,40 @@ describe('generateMarkDown', () => {
   })
 
   it('returns markdown with coverage and report', async () => {
-    const result = await generateMarkDown(85, 'All tests passed!')
+    const result = await generateMarkDown(
+      85,
+      'http://service.url',
+      'All tests passed!'
+    )
     expect(result).toContain('### Code Quality Report')
     expect(result).toContain('### **Coverage**: 85%')
     expect(result).toContain('```text\nAll tests passed!\n```')
+    expect(result).toContain(
+      '[Service URL http://service.url](http://service.url)'
+    )
   })
 
   it('returns markdown with default message if report is empty', async () => {
-    const result = await generateMarkDown(90, '')
+    const result = await generateMarkDown(90, '', '')
     expect(result).toContain('No coverage report provided.')
   })
 
   it('handles zero coverage', async () => {
-    const result = await generateMarkDown(0, 'No tests run')
+    const result = await generateMarkDown(0, '', 'No tests run')
     expect(result).toContain('**Coverage**: 0%')
     expect(result).toContain('No tests run')
   })
 
   it('returns markdown with no coverage', async () => {
-    const result = await generateMarkDown(undefined, 'All tests passed!')
+    const result = await generateMarkDown(
+      undefined,
+      'http://service.url',
+      'All tests passed!'
+    )
     expect(result).toContain('### Code Quality Report')
     expect(result).toContain('```text\nAll tests passed!\n```')
+    expect(result).toContain(
+      '[Service URL http://service.url](http://service.url)'
+    )
   })
 })
