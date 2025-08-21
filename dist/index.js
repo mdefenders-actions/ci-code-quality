@@ -27256,7 +27256,7 @@ async function generateMarkDown(coverage, url, report) {
     const reportTitle = coreExports.getInput('reportTitle', { required: true });
     markDown = `### ${reportTitle}\n\n`;
     if (url) {
-        markDown += `[Service URL ${url}](${url})\n\n`;
+        markDown += `Service URL [${url}](${url})\n\n`;
     }
     if (coverage !== undefined && coverage !== null && !isNaN(coverage)) {
         markDown += `### **Coverage**: ${coverage}%\n\n`;
@@ -27358,7 +27358,10 @@ async function run() {
             const serviceDomain = coreExports.getInput('serviceDomain', { required: true });
             const subdomain = coreExports.getInput('subdomain', { required: true });
             const prefix = coreExports.getInput('prefix', { required: true });
-            url = `${prefix}${appName}.${subdomain}.${serviceDomain}:${servicePort}`;
+            url = `${prefix}${appName}.${subdomain}.${serviceDomain}`;
+            if (servicePort !== '80' && servicePort !== '443') {
+                url += `:${servicePort}`;
+            }
         }
     }
     catch (error) {

@@ -44,7 +44,11 @@ export async function run(): Promise<void> {
       const serviceDomain = core.getInput('serviceDomain', { required: true })
       const subdomain = core.getInput('subdomain', { required: true })
       const prefix = core.getInput('prefix', { required: true })
-      url = `${prefix}${appName}.${subdomain}.${serviceDomain}:${servicePort}`
+
+      url = `${prefix}${appName}.${subdomain}.${serviceDomain}`
+      if (servicePort !== '80' && servicePort !== '443') {
+        url += `:${servicePort}`
+      }
     }
   } catch (error: unknown) {
     if (error instanceof Error) {

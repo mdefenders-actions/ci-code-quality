@@ -28,7 +28,7 @@ describe('generateMarkDown', () => {
     expect(result).toContain('### **Coverage**: 85%')
     expect(result).toContain('```text\nAll tests passed!\n```')
     expect(result).toContain(
-      '[Service URL http://service.url](http://service.url)'
+      'Service URL [http://service.url](http://service.url)'
     )
   })
 
@@ -52,7 +52,7 @@ describe('generateMarkDown', () => {
     expect(result).toContain('### Code Quality Report')
     expect(result).toContain('```text\nAll tests passed!\n```')
     expect(result).toContain(
-      '[Service URL http://service.url](http://service.url)'
+      'Service URL [http://service.url](http://service.url)'
     )
   })
 })

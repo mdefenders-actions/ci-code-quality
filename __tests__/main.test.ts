@@ -42,7 +42,7 @@ describe('main.ts', () => {
     // Mock generateMarkDown to return a markdown string
     generateMarkDown.mockImplementation((coverage, url, report) =>
       Promise.resolve(
-        `### Code Quality Report\n[Service URL ${url}](${url})\n### **Coverage**: ${coverage}%\n\n\`\`\`text\n${report}\n\`\`\``
+        `### Code Quality Report\nService URL [${url}](${url})\n### **Coverage**: ${coverage}%\n\n\`\`\`text\n${report}\n\`\`\``
       )
     )
   })

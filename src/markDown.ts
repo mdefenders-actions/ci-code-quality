@@ -13,7 +13,7 @@ export async function generateMarkDown(
   const reportTitle = core.getInput('reportTitle', { required: true })
   markDown = `### ${reportTitle}\n\n`
   if (url) {
-    markDown += `[Service URL ${url}](${url})\n\n`
+    markDown += `Service URL [${url}](${url})\n\n`
   }
   if (coverage !== undefined && coverage !== null && !isNaN(coverage)) {
     markDown += `### **Coverage**: ${coverage}%\n\n`
