@@ -47,7 +47,7 @@ inputs:
 
   appName:
     description: 'Application name for the report'
-    default: '${{ github.repository }}'
+    default: '${{ github.repository.name }}'
 
   servicePort:
     description: 'Service port for the application'
