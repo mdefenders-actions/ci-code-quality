@@ -10,7 +10,7 @@ export async function generateMarkDown(
   }
   let markDown = ''
   const reportTitle = core.getInput('reportTitle', { required: true })
-  markDown = `### ${reportTitle}.\n\n`
+  markDown = `### ${reportTitle}\n\n`
   if (coverage !== undefined && coverage !== null && !isNaN(coverage)) {
     markDown += `### **Coverage**: ${coverage}%\n\n`
   }

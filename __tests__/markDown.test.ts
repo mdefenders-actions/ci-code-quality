@@ -20,7 +20,7 @@ describe('generateMarkDown', () => {
 
   it('returns markdown with coverage and report', async () => {
     const result = await generateMarkDown(85, 'All tests passed!')
-    expect(result).toContain('### Code Quality Report.')
+    expect(result).toContain('### Code Quality Report')
     expect(result).toContain('### **Coverage**: 85%')
     expect(result).toContain('```text\nAll tests passed!\n```')
   })
@@ -38,7 +38,7 @@ describe('generateMarkDown', () => {
 
   it('returns markdown with no coverage', async () => {
     const result = await generateMarkDown(undefined, 'All tests passed!')
-    expect(result).toContain('### Code Quality Report.')
+    expect(result).toContain('### Code Quality Report')
     expect(result).toContain('```text\nAll tests passed!\n```')
   })
 })

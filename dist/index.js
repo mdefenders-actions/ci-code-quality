@@ -27254,7 +27254,7 @@ async function generateMarkDown(coverage, report) {
     }
     let markDown = '';
     const reportTitle = coreExports.getInput('reportTitle', { required: true });
-    markDown = `### ${reportTitle}.\n\n`;
+    markDown = `### ${reportTitle}\n\n`;
     if (coverage !== undefined && coverage !== null && !isNaN(coverage)) {
         markDown += `### **Coverage**: ${coverage}%\n\n`;
     }
