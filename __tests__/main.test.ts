@@ -32,7 +32,7 @@ describe('main.ts', () => {
       if (name === 'appName') return 'myapp'
       if (name === 'servicePort') return '8080'
       if (name === 'serviceDomain') return 'svc.cluster.local'
-      if (name === 'namespace') return 'default'
+      if (name === 'subdomain') return 'default'
       if (name === 'prefix') return 'http://'
       return 'true'
     })

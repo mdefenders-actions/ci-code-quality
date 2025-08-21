@@ -27356,9 +27356,9 @@ async function run() {
             const appName = coreExports.getInput('appName', { required: true });
             const servicePort = coreExports.getInput('servicePort', { required: true });
             const serviceDomain = coreExports.getInput('serviceDomain', { required: true });
-            const namespace = coreExports.getInput('namespace', { required: true });
+            const subdomain = coreExports.getInput('subdomain', { required: true });
             const prefix = coreExports.getInput('prefix', { required: true });
-            url = `${prefix}${appName}.${namespace}.${serviceDomain}:${servicePort}`;
+            url = `${prefix}${appName}.${subdomain}.${serviceDomain}:${servicePort}`;
         }
     }
     catch (error) {

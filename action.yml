@@ -61,6 +61,10 @@ inputs:
     description: 'Kubernetes namespace for the application'
     default: 'default'
 
+  subdomain:
+    description: 'Subdomain for the application'
+    default: 'svc.cluster.local'
+
   prefix:
     description: 'Service URL prefix'
     default: 'http://'

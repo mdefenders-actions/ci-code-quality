@@ -42,9 +42,9 @@ export async function run(): Promise<void> {
       const appName = core.getInput('appName', { required: true })
       const servicePort = core.getInput('servicePort', { required: true })
       const serviceDomain = core.getInput('serviceDomain', { required: true })
-      const namespace = core.getInput('namespace', { required: true })
+      const subdomain = core.getInput('subdomain', { required: true })
       const prefix = core.getInput('prefix', { required: true })
-      url = `${prefix}${appName}.${namespace}.${serviceDomain}:${servicePort}`
+      url = `${prefix}${appName}.${subdomain}.${serviceDomain}:${servicePort}`
     }
   } catch (error: unknown) {
     if (error instanceof Error) {
