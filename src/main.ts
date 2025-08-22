@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import { generateMarkDown } from './markDown.js'
-import { runTests } from './runTests.js'
+import { runAudit, runIntegrationTests, runLint, runTests } from './runTests.js'
 
 /**
  * The main function for the action.
@@ -8,17 +8,47 @@ import { runTests } from './runTests.js'
  * @returns Resolves when the action is complete.
  */
 export async function run(): Promise<void> {
-  let coverage = 0
+  let coverage
   let report = ''
+  let url = ''
   try {
-    const minCoverage = core.getInput('minCoverage', { required: true })
-    ;[coverage, report] = await runTests()
-    if (coverage < 0) {
-      coverage = 0
-    } else if (coverage < parseFloat(minCoverage)) {
-      throw new Error(
-        `Coverage ${coverage}% is below threshold ${minCoverage}%`
-      )
+    const relativePath = core.getInput('relativePath', { required: true })
+    const lintEnabled = core.getBooleanInput('runLint', { required: true })
+    const auditEnabled = core.getBooleanInput('runAudit', { required: true })
+    const unitTestsEnabled = core.getBooleanInput('runUnitTests', {
+      required: true
+    })
+    const intTestsEnabled = core.getBooleanInput('runIntegrationTests', {
+      required: true
+    })
+
+    if (lintEnabled) {
+      await runLint(relativePath)
+    }
+    if (auditEnabled) {
+      await runAudit(relativePath)
+    }
+    if (unitTestsEnabled) {
+      const minCoverage = core.getInput('minCoverage', { required: true })
+      ;[coverage, report] = await runTests(relativePath)
+
+      if (coverage < parseFloat(minCoverage))
+        throw new Error(
+          `Coverage ${coverage}% is below threshold ${minCoverage}%`
+        )
+    }
+    if (intTestsEnabled) {
+      report = await runIntegrationTests(relativePath)
+      const appName = core.getInput('appName', { required: true })
+      const servicePort = core.getInput('servicePort', { required: true })
+      const serviceDomain = core.getInput('serviceDomain', { required: true })
+      const subdomain = core.getInput('subdomain', { required: true })
+      const prefix = core.getInput('prefix', { required: true })
+
+      url = `${prefix}${appName}.${subdomain}.${serviceDomain}`
+      if (servicePort !== '80' && servicePort !== '443') {
+        url += `:${servicePort}`
+      }
     }
   } catch (error: unknown) {
     if (error instanceof Error) {
@@ -29,7 +59,7 @@ export async function run(): Promise<void> {
       core.setFailed('Unknown error occurred')
     }
   } finally {
-    const markDownReport = await generateMarkDown(coverage, report)
+    const markDownReport = await generateMarkDown(coverage, url, report)
     await core.summary.addRaw(markDownReport, true).write()
     core.setOutput('coverage', coverage)
     core.setOutput('report', markDownReport)

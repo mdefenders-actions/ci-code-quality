@@ -27247,63 +27247,77 @@ function requireCore () {
 
 var coreExports = requireCore();
 
-async function generateMarkDown(coverage, report) {
+async function generateMarkDown(coverage, url, report) {
     // Construct the Markdown content
     if (report === '') {
         report = 'No coverage report provided.';
     }
-    let markDown = `### Code Quality Report. **Coverage**: ${coverage}%\n\n`;
+    let markDown = '';
+    const reportTitle = coreExports.getInput('reportTitle', { required: true });
+    markDown = `### ${reportTitle}\n\n`;
+    if (url) {
+        markDown += `Service URL [${url}](${url})\n\n`;
+    }
+    if (coverage !== undefined && coverage !== null && !isNaN(coverage)) {
+        markDown += `### **Coverage**: ${coverage}%\n\n`;
+    }
     markDown += `\`\`\`text\n${report}\n\`\`\`\n\n`;
     return markDown;
 }
 
 var execExports = requireExec();
 
-async function runTests() {
+async function runLint(relativePath) {
+    coreExports.startGroup('Running ESLint');
+    await execExports.exec('npx', ['eslint', '.'], {
+        cwd: relativePath,
+        failOnStdErr: true
+    });
+    coreExports.endGroup(); // Construct the Markdown content
+}
+async function runAudit(relativePath) {
+    coreExports.startGroup('Running npm audit');
+    await execExports.exec('npm', ['audit', '--audit-level=high'], {
+        cwd: relativePath,
+        failOnStdErr: true
+    });
+    coreExports.endGroup();
+}
+async function runTests(relativePath) {
     // Construct the Markdown content
-    const runLint = coreExports.getBooleanInput('runLint', { required: true });
-    const runAudit = coreExports.getBooleanInput('runAudit', { required: true });
-    const runTests = coreExports.getBooleanInput('runTests', { required: true });
-    const testCommand = coreExports.getInput('testCommand', { required: true });
-    const relativePath = coreExports.getInput('relativePath', { required: true });
-    if (runLint) {
-        coreExports.startGroup('Running ESLint');
-        await execExports.exec('npx', ['eslint', '.'], {
-            cwd: relativePath,
-            failOnStdErr: true
-        });
-        coreExports.endGroup();
-    }
-    if (runAudit) {
-        coreExports.startGroup('Running npm audit');
-        await execExports.exec('npm', ['audit', '--audit-level=high'], {
-            cwd: relativePath,
-            failOnStdErr: true
-        });
-        coreExports.endGroup();
-    }
-    if (runTests) {
-        coreExports.startGroup('Running tests');
-        const output = [];
-        const coverageFile = `${relativePath}/coverage/coverage-summary.json`;
-        await execExports.exec('mkdir', ['-p', 'coverage'], { cwd: relativePath });
-        await execExports.exec(testCommand, [
-            '--coverageReporters=json-summary',
-            '--coverageReporters=text',
-            '--coverageReporters=html'
-        ], {
-            cwd: relativePath,
-            listeners: {
-                stdout: (data) => output.push(data)
-            }
-        });
-        await fs.access(coverageFile);
-        const { total: { statements: { pct: coverage } } } = JSON.parse(await fs.readFile(coverageFile, 'utf-8'));
-        coreExports.info(`Detected coverage: ${coverage}%`);
-        coreExports.endGroup();
-        return [coverage, Buffer.concat(output).toString('utf-8')];
-    }
-    return [-1, 'No coverage check requested'];
+    const unitTestCommand = coreExports.getInput('unitTestCommand', { required: true });
+    coreExports.startGroup('Running tests');
+    const output = [];
+    const coverageFile = `${relativePath}/coverage/coverage-summary.json`;
+    await execExports.exec('mkdir', ['-p', 'coverage'], { cwd: relativePath });
+    await execExports.exec(unitTestCommand, [
+        '--coverageReporters=json-summary',
+        '--coverageReporters=text',
+        '--coverageReporters=html'
+    ], {
+        cwd: relativePath,
+        listeners: {
+            stdout: (data) => output.push(data)
+        }
+    });
+    await fs.access(coverageFile);
+    const { total: { statements: { pct: coverage } } } = JSON.parse(await fs.readFile(coverageFile, 'utf-8'));
+    coreExports.info(`Detected coverage: ${coverage}%`);
+    coreExports.endGroup();
+    return [coverage, Buffer.concat(output).toString('utf-8')];
+}
+async function runIntegrationTests(relativePath) {
+    coreExports.startGroup('Running integration tests');
+    const intTestCommand = coreExports.getInput('intTestCommand', { required: true });
+    const output = [];
+    await execExports.exec(intTestCommand, [], {
+        cwd: relativePath,
+        listeners: {
+            stdout: (data) => output.push(data)
+        }
+    });
+    coreExports.endGroup();
+    return Buffer.concat(output).toString('utf-8');
 }
 
 /**
@@ -27312,16 +27326,42 @@ async function runTests() {
  * @returns Resolves when the action is complete.
  */
 async function run() {
-    let coverage = 0;
+    let coverage;
     let report = '';
+    let url = '';
     try {
-        const minCoverage = coreExports.getInput('minCoverage', { required: true });
-        [coverage, report] = await runTests();
-        if (coverage < 0) {
-            coverage = 0;
+        const relativePath = coreExports.getInput('relativePath', { required: true });
+        const lintEnabled = coreExports.getBooleanInput('runLint', { required: true });
+        const auditEnabled = coreExports.getBooleanInput('runAudit', { required: true });
+        const unitTestsEnabled = coreExports.getBooleanInput('runUnitTests', {
+            required: true
+        });
+        const intTestsEnabled = coreExports.getBooleanInput('runIntegrationTests', {
+            required: true
+        });
+        if (lintEnabled) {
+            await runLint(relativePath);
         }
-        else if (coverage < parseFloat(minCoverage)) {
-            throw new Error(`Coverage ${coverage}% is below threshold ${minCoverage}%`);
+        if (auditEnabled) {
+            await runAudit(relativePath);
+        }
+        if (unitTestsEnabled) {
+            const minCoverage = coreExports.getInput('minCoverage', { required: true });
+            [coverage, report] = await runTests(relativePath);
+            if (coverage < parseFloat(minCoverage))
+                throw new Error(`Coverage ${coverage}% is below threshold ${minCoverage}%`);
+        }
+        if (intTestsEnabled) {
+            report = await runIntegrationTests(relativePath);
+            const appName = coreExports.getInput('appName', { required: true });
+            const servicePort = coreExports.getInput('servicePort', { required: true });
+            const serviceDomain = coreExports.getInput('serviceDomain', { required: true });
+            const subdomain = coreExports.getInput('subdomain', { required: true });
+            const prefix = coreExports.getInput('prefix', { required: true });
+            url = `${prefix}${appName}.${subdomain}.${serviceDomain}`;
+            if (servicePort !== '80' && servicePort !== '443') {
+                url += `:${servicePort}`;
+            }
         }
     }
     catch (error) {
@@ -27335,7 +27375,7 @@ async function run() {
         }
     }
     finally {
-        const markDownReport = await generateMarkDown(coverage, report);
+        const markDownReport = await generateMarkDown(coverage, url, report);
         await coreExports.summary.addRaw(markDownReport, true).write();
         coreExports.setOutput('coverage', coverage);
         coreExports.setOutput('report', markDownReport);

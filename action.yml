@@ -12,32 +12,62 @@ inputs:
   runLint:
     description: 'Run ESLint'
     default: 'true'
-    required: false
 
   runAudit:
     description: 'Run npm audit'
     default: 'true'
-    required: false
 
-  runTests:
-    description: 'Run tests'
+  runUnitTests:
+    description: 'Run unit tests with coverage'
     default: 'true'
-    required: false
 
-  testCommand:
+  runIntegrationTests:
+    description: 'Run post-deploy integration tests'
+    default: 'false'
+
+  unitTestCommand:
     description: 'Test command to run'
     default: 'npm run test:unit -- --coverage'
-    required: false
+
+  intTestCommand:
+    description: 'Test command to run'
+    default: 'make test-integration'
 
   minCoverage:
     description: 'Minimum test coverage threshold (%)'
     default: '65'
-    required: false
 
   relativePath:
     description: 'Relative path to the project directory'
     default: '.'
-    required: false
+
+  reportTitle:
+    description: 'Title for the report'
+    default: 'Code Quality Report'
+
+  appName:
+    description: 'Application name for the report'
+    default: '${{ github.repository.name }}'
+
+  servicePort:
+    description: 'Service port for the application'
+    default: '80'
+
+  serviceDomain:
+    description: 'Service domain for the application'
+    default: 'svc.cluster.local'
+
+  namespace:
+    description: 'Kubernetes namespace for the application'
+    default: 'default'
+
+  subdomain:
+    description: 'Subdomain for the application'
+    default: 'svc.cluster.local'
+
+  prefix:
+    description: 'Service URL prefix'
+    default: 'http://'
 
 outputs:
   report:
