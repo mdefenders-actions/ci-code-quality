@@ -74,6 +74,7 @@ jobs:
           testCommand: 'npm run test:unit -- --coverage'
           minCoverage: '65'
           relativePath: '.'
+          appName: "test-app"
 
       - name: Print Coverage Output
         run: |
