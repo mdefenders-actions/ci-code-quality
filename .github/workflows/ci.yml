@@ -70,11 +70,8 @@ jobs:
         with:
           runLint: true
           runAudit: true
-          runTests: true
-          testCommand: 'npm run test:unit -- --coverage'
           minCoverage: '65'
           relativePath: '.'
-          appName: 'test-app'
           url: 'http://localhost:3000'
 
       - name: Print Coverage Output
