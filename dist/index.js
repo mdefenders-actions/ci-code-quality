@@ -27353,15 +27353,7 @@ async function run() {
         }
         if (intTestsEnabled) {
             report = await runIntegrationTests(relativePath);
-            const appName = coreExports.getInput('appName', { required: true });
-            const servicePort = coreExports.getInput('servicePort', { required: true });
-            const serviceDomain = coreExports.getInput('serviceDomain', { required: true });
-            const subdomain = coreExports.getInput('subdomain', { required: true });
-            const prefix = coreExports.getInput('prefix', { required: true });
-            url = `${prefix}${appName}.${subdomain}.${serviceDomain}`;
-            if (servicePort !== '80' && servicePort !== '443') {
-                url += `:${servicePort}`;
-            }
+            url = coreExports.getInput('url', { required: true });
         }
     }
     catch (error) {

@@ -29,10 +29,7 @@ describe('main.ts', () => {
       if (name === 'minCoverage') return '80'
       if (name === 'relativePath') return '.'
       if (name === 'unitTestCommand') return 'npm test'
-      if (name === 'appName') return 'myapp'
-      if (name === 'servicePort') return '8080'
-      if (name === 'serviceDomain') return 'svc.cluster.local'
-      if (name === 'subdomain') return 'default'
+      if (name === 'url') return 'http://myapp.default.svc.cluster.local:8080'
       if (name === 'prefix') return 'http://'
       return 'true'
     })

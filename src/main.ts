@@ -39,16 +39,7 @@ export async function run(): Promise<void> {
     }
     if (intTestsEnabled) {
       report = await runIntegrationTests(relativePath)
-      const appName = core.getInput('appName', { required: true })
-      const servicePort = core.getInput('servicePort', { required: true })
-      const serviceDomain = core.getInput('serviceDomain', { required: true })
-      const subdomain = core.getInput('subdomain', { required: true })
-      const prefix = core.getInput('prefix', { required: true })
-
-      url = `${prefix}${appName}.${subdomain}.${serviceDomain}`
-      if (servicePort !== '80' && servicePort !== '443') {
-        url += `:${servicePort}`
-      }
+      url = core.getInput('url', { required: true })
     }
   } catch (error: unknown) {
     if (error instanceof Error) {
