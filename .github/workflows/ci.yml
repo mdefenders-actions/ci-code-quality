@@ -75,6 +75,7 @@ jobs:
           minCoverage: '65'
           relativePath: '.'
           appName: 'test-app'
+          url: 'http://localhost:3000'
 
       - name: Print Coverage Output
         run: |
